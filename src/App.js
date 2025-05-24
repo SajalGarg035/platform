@@ -3,7 +3,13 @@ import {BrowserRouter, Routes, Route} from 'react-router-dom';
 import {Toaster} from 'react-hot-toast';
 import Home from './pages/Home';
 import EditorPage from './pages/EditorPage';
+import Login from './components/auth/Login';
+import Signup from './components/auth/Signup';
+import Profile from './components/Profile';
+import ProtectedRoute from './components/ProtectedRoute';
 import {RecoilRoot} from "recoil";
+import {AuthProvider} from './context/AuthContext';
+import AuthSuccess from './components/auth/AuthSuccess';
 
 function App() {
     return (
@@ -39,15 +45,32 @@ function App() {
                 />
             </div>
             <BrowserRouter>
-                <RecoilRoot>
-                    <Routes>
-                        <Route path="/" element={<Home />}></Route>
-                        <Route
-                            path="/editor/:roomId"
-                            element={<EditorPage />}
-                        ></Route>
-                    </Routes>
-                </RecoilRoot>
+                <AuthProvider>
+                    <RecoilRoot>
+                        <Routes>
+                            <Route path="/" element={<Home />} />
+                            <Route path="/login" element={<Login />} />
+                            <Route path="/signup" element={<Signup />} />
+                            <Route path="/auth/success" element={<AuthSuccess />} />
+                            <Route
+                                path="/profile"
+                                element={
+                                    <ProtectedRoute>
+                                        <Profile />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/editor/:roomId"
+                                element={
+                                    <ProtectedRoute>
+                                        <EditorPage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                        </Routes>
+                    </RecoilRoot>
+                </AuthProvider>
             </BrowserRouter>
         </>
     );

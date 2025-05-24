@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { v4 as uuidV4 } from 'uuid';
 import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiGithub, FiCode, FiUsers, FiZap, FiShield, FiGlobe, FiArrowRight, FiPlay, FiStar } from 'react-icons/fi';
+import { FiGithub, FiCode, FiUsers, FiZap, FiShield, FiGlobe, FiArrowRight, FiPlay, FiStar, FiUser, FiLogOut } from 'react-icons/fi';
 import { useRecoilState } from 'recoil';
 import { darkMode } from '../atoms';
+import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
     const navigate = useNavigate();
@@ -12,16 +13,22 @@ const Home = () => {
     const [roomId, setRoomId] = useState('');
     const [username, setUsername] = useState('');
     const [showJoinModal, setShowJoinModal] = useState(false);
+    const { user, isAuthenticated, logout } = useAuth();
 
     const createNewRoom = (e) => {
         e.preventDefault();
+        if (!isAuthenticated) {
+            toast.error('Please login to create a room');
+            navigate('/login');
+            return;
+        }
         const id = uuidV4();
         setRoomId(id);
-        setShowJoinModal(true);
-        toast.success('New room created! Enter your username to join.');
+        setUsername(user.username);
+        joinRoom(id, user.username);
     };
 
-    const joinRoom = () => {
+    const joinRoom = (roomId, username) => {
         if (!roomId || !username) {
             toast.error('Room ID & username are required');
             return;
@@ -31,9 +38,23 @@ const Home = () => {
         });
     };
 
+    const handleJoinRoom = () => {
+        if (!isAuthenticated) {
+            toast.error('Please login to join a room');
+            navigate('/login');
+            return;
+        }
+        setShowJoinModal(true);
+        setUsername(user.username);
+    };
+
+    const handleJoinSubmit = () => {
+        joinRoom(roomId, username);
+    };
+
     const handleInputEnter = (e) => {
         if (e.code === 'Enter') {
-            joinRoom();
+            handleJoinSubmit();
         }
     };
 
@@ -81,6 +102,28 @@ const Home = () => {
                         >
                             {isDark ? '☀️' : '🌙'}
                         </button>
+                        
+                        {isAuthenticated ? (
+                            <div className="flex items-center gap-4">
+                                <Link to="/profile" className="nav-link">
+                                    <FiUser size={20} />
+                                    <span>{user?.username}</span>
+                                </Link>
+                                <button onClick={logout} className="nav-link" title="Logout">
+                                    <FiLogOut size={20} />
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-4">
+                                <Link to="/login" className="nav-link">
+                                    Sign In
+                                </Link>
+                                <Link to="/signup" className="nav-link bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                                    Sign Up
+                                </Link>
+                            </div>
+                        )}
+                        
                         <a 
                             href="https://github.com/sajalgarg035" 
                             className="nav-link"
@@ -123,7 +166,7 @@ const Home = () => {
                             </button>
                             
                             <button 
-                                onClick={() => setShowJoinModal(true)}
+                                onClick={handleJoinRoom}
                                 className="cta-secondary"
                             >
                                 <FiUsers size={18} />
@@ -236,7 +279,7 @@ const Home = () => {
                                 <input
                                     type="text"
                                     className="enterprise-input"
-                                    placeholder="Enter room ID or create new"
+                                    placeholder="Enter room ID"
                                     value={roomId}
                                     onChange={(e) => setRoomId(e.target.value)}
                                     onKeyUp={handleInputEnter}
@@ -248,10 +291,11 @@ const Home = () => {
                                 <input
                                     type="text"
                                     className="enterprise-input"
-                                    placeholder="Enter your username"
+                                    placeholder="Your username"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
                                     onKeyUp={handleInputEnter}
+                                    readOnly={isAuthenticated}
                                 />
                             </div>
                         </div>
@@ -264,7 +308,7 @@ const Home = () => {
                                 Cancel
                             </button>
                             <button 
-                                onClick={joinRoom}
+                                onClick={handleJoinSubmit}
                                 className="btn-primary"
                                 disabled={!roomId || !username}
                             >

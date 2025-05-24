@@ -1,4 +1,5 @@
 import './App.css';
+import './styles/editor.css';
 import {BrowserRouter, Routes, Route} from 'react-router-dom';
 import {Toaster} from 'react-hot-toast';
 import Home from './pages/Home';

@@ -18,6 +18,7 @@ const ACTIONS = require('./src/actions/Actions');
 
 // Import routes
 const authRoutes = require('./routes/auth');
+const aiRoutes = require('./routes/ai');
 
 // Passport configuration - import after routes
 require('./config/passport');
@@ -75,6 +76,7 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -105,7 +107,7 @@ function getAllConnectedClients(roomId) {
     );
 }
 
-function compileAndRunCode(code, language, callback) {
+function compileAndRunCode(code, language, inputs = [], callback) {
     const tempDir = path.join(__dirname, 'temp');
     if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir, { recursive: true });
@@ -113,31 +115,85 @@ function compileAndRunCode(code, language, callback) {
 
     let fileName, command;
     const timestamp = Date.now();
+    const startTime = Date.now();
+
+    // Prepare input data
+    let inputData = '';
+    if (inputs && inputs.length > 0) {
+        inputData = inputs.map(input => input.value).join('\n') + '\n';
+    }
 
     switch (language) {
         case 'javascript':
             fileName = `temp_${timestamp}.js`;
-            fs.writeFileSync(path.join(tempDir, fileName), code);
+            
+            // Modify code to handle inputs
+            let modifiedCode = code;
+            if (inputs.length > 0) {
+                const inputValues = inputs.map(input => `"${input.value}"`).join(', ');
+                modifiedCode = `
+                // Simulated inputs: ${inputs.map(i => `${i.label}=${i.value}`).join(', ')}
+                const inputs = [${inputValues}];
+                let inputIndex = 0;
+                const readline = { question: (prompt, callback) => { 
+                    console.log(prompt + inputs[inputIndex] || ''); 
+                    callback(inputs[inputIndex++] || ''); 
+                }};
+                
+                ${code}
+                `;
+            }
+            
+            fs.writeFileSync(path.join(tempDir, fileName), modifiedCode);
             command = `node ${path.join(tempDir, fileName)}`;
             break;
+            
         case 'python':
             fileName = `temp_${timestamp}.py`;
-            fs.writeFileSync(path.join(tempDir, fileName), code);
-            command = `python3 ${path.join(tempDir, fileName)}`;
+            
+            let pythonCode = code;
+            if (inputs.length > 0) {
+                // Create input file for Python
+                const inputFileName = `input_${timestamp}.txt`;
+                fs.writeFileSync(path.join(tempDir, inputFileName), inputData);
+                
+                pythonCode = `
+# Simulated inputs: ${inputs.map(i => `${i.label}=${i.value}`).join(', ')}
+import sys
+sys.stdin = open('${inputFileName}', 'r')
+
+${code}
+`;
+            }
+            
+            fs.writeFileSync(path.join(tempDir, fileName), pythonCode);
+            command = `cd ${tempDir} && python3 ${fileName}`;
             break;
+            
         case 'cpp':
         case 'clike':
             fileName = `temp_${timestamp}.cpp`;
             const executableName = `temp_${timestamp}`;
+            
             fs.writeFileSync(path.join(tempDir, fileName), code);
-            command = `g++ ${path.join(tempDir, fileName)} -o ${path.join(tempDir, executableName)} && ${path.join(tempDir, executableName)}`;
+            
+            if (inputs.length > 0) {
+                const inputFileName = `input_${timestamp}.txt`;
+                fs.writeFileSync(path.join(tempDir, inputFileName), inputData);
+                command = `cd ${tempDir} && g++ ${fileName} -o ${executableName} && ./${executableName} < ${inputFileName}`;
+            } else {
+                command = `cd ${tempDir} && g++ ${fileName} -o ${executableName} && ./${executableName}`;
+            }
             break;
+            
         default:
             callback({ error: 'Language not supported for compilation' });
             return;
     }
 
-    exec(command, { timeout: 10000 }, (error, stdout, stderr) => {
+    exec(command, { timeout: 15000, cwd: tempDir }, (error, stdout, stderr) => {
+        const executionTime = Date.now() - startTime;
+        
         // Clean up temp files
         try {
             if (fs.existsSync(path.join(tempDir, fileName))) {
@@ -149,14 +205,27 @@ function compileAndRunCode(code, language, callback) {
                     fs.unlinkSync(execPath);
                 }
             }
+            // Clean up input files
+            const inputFileName = `input_${timestamp}.txt`;
+            if (fs.existsSync(path.join(tempDir, inputFileName))) {
+                fs.unlinkSync(path.join(tempDir, inputFileName));
+            }
         } catch (e) {
             console.log('Cleanup error:', e);
         }
 
         if (error) {
-            callback({ error: error.message, stderr: stderr });
+            callback({ 
+                error: error.message, 
+                stderr: stderr,
+                executionTime 
+            });
         } else {
-            callback({ output: stdout, stderr: stderr });
+            callback({ 
+                output: stdout, 
+                stderr: stderr,
+                executionTime 
+            });
         }
     });
 }
@@ -186,12 +255,16 @@ io.on('connection', (socket) => {
         io.to(socketId).emit(ACTIONS.CODE_CHANGE, { code });
     });
 
-    socket.on(ACTIONS.COMPILE_CODE, ({ roomId, code, language }) => {
-        console.log(`🚀 Compiling ${language} code in room ${roomId}`);
-        compileAndRunCode(code, language, (result) => {
+    socket.on(ACTIONS.COMPILE_CODE, ({ roomId, code, language, username, inputs = [], executionMode = 'no-input', startTime }) => {
+        console.log(`🚀 Compiling ${language} code in room ${roomId} with ${inputs.length} inputs`);
+        const actualStartTime = startTime || Date.now();
+        
+        compileAndRunCode(code, language, inputs, (result) => {
             io.to(roomId).emit(ACTIONS.COMPILATION_RESULT, {
                 result,
-                username: userSocketMap[socket.id]
+                username: userSocketMap[socket.id],
+                executionTime: result.executionTime,
+                inputs: inputs
             });
         });
     });

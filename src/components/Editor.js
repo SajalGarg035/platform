@@ -1,7 +1,12 @@
-import React, {useEffect, useRef} from 'react';
-import {language, cmtheme} from '../../src/atoms';
-import {useRecoilValue} from 'recoil';
+import React, { useEffect, useRef, useState } from 'react';
+import { language, cmtheme, darkMode } from '../atoms';
+import { useRecoilValue, useRecoilState } from 'recoil';
 import ACTIONS from '../actions/Actions';
+import { 
+    FiSettings, FiMaximize2, FiMinimize2, FiType, FiEye, FiGrid,
+    FiZap, FiSun, FiMoon, FiMonitor, FiChevronDown, FiCheck,
+    FiCopy, FiDownload, FiUpload, FiRefreshCw
+} from 'react-icons/fi';
 
 // CODE MIRROR
 import Codemirror from 'codemirror';
@@ -106,58 +111,440 @@ import 'codemirror/addon/search/searchcursor.js';
 import 'codemirror/addon/search/jump-to-line.js';
 import 'codemirror/addon/dialog/dialog.js';
 import 'codemirror/addon/dialog/dialog.css';
+import './Editor.css';
 
-const Editor = ({socketRef, roomId, onCodeChange}) => {
-
+const Editor = ({ socketRef, roomId, onCodeChange }) => {
     const editorRef = useRef(null);
-    const lang = useRecoilValue(language);
-    const editorTheme = useRecoilValue(cmtheme);
+    const [lang, setLang] = useRecoilState(language);
+    const [editorTheme, setEditorTheme] = useRecoilState(cmtheme);
+    const [isDark, setIsDark] = useRecoilState(darkMode);
+    
+    // UI state
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
+    const [fontSize, setFontSize] = useState(14);
+    const [lineHeight, setLineHeight] = useState(1.6);
+    const [showLineNumbers, setShowLineNumbers] = useState(true);
+    const [wordWrap, setWordWrap] = useState(false);
+    const [cursorBlinkRate, setCursorBlinkRate] = useState(530);
+
+    // Theme categories
+    const themeCategories = {
+        'Dark Themes': [
+            { value: 'monokai', label: 'Monokai Pro', preview: '#2D2A2E' },
+            { value: 'dracula', label: 'Dracula', preview: '#282A36' },
+            { value: 'material-darker', label: 'Material Darker', preview: '#212121' },
+            { value: 'material-ocean', label: 'Material Ocean', preview: '#0F111A' },
+            { value: 'darcula', label: 'Darcula', preview: '#2B2B2B' },
+            { value: 'nord', label: 'Nord', preview: '#2E3440' },
+            { value: 'oceanic-next', label: 'Oceanic Next', preview: '#1B2B34' },
+            { value: 'gruvbox-dark', label: 'Gruvbox Dark', preview: '#282828' },
+            { value: 'tomorrow-night-eighties', label: 'Tomorrow Night 80s', preview: '#2D2D2D' },
+            { value: 'panda-syntax', label: 'Panda', preview: '#292A2B' },
+            { value: 'shadowfox', label: 'Shadowfox', preview: '#2A2A2E' },
+            { value: 'zenburn', label: 'Zenburn', preview: '#3F3F3F' }
+        ],
+        'Light Themes': [
+            { value: 'default', label: 'Default Light', preview: '#FFFFFF' },
+            { value: 'eclipse', label: 'Eclipse', preview: '#FFFFFF' },
+            { value: 'elegant', label: 'Elegant', preview: '#FFFFFF' },
+            { value: 'neat', label: 'Neat', preview: '#FFFFFF' },
+            { value: 'solarized', label: 'Solarized Light', preview: '#FDF6E3' },
+            { value: 'base16-light', label: 'Base16 Light', preview: '#F5F5F5' },
+            { value: 'duotone-light', label: 'Duotone Light', preview: '#FAFAFA' },
+            { value: 'mdn-like', label: 'MDN Like', preview: '#FFFFFF' },
+            { value: 'yeti', label: 'Yeti', preview: '#FFFFFF' },
+            { value: 'paraiso-light', label: 'Paraiso Light', preview: '#E7E9DB' }
+        ],
+        'Vibrant Themes': [
+            { value: 'material', label: 'Material', preview: '#263238' },
+            { value: 'cobalt', label: 'Cobalt', preview: '#002240' },
+            { value: 'vibrant-ink', label: 'Vibrant Ink', preview: '#0F0F0F' },
+            { value: 'the-matrix', label: 'The Matrix', preview: '#000000' },
+            { value: 'blackboard', label: 'Blackboard', preview: '#0C1021' },
+            { value: 'twilight', label: 'Twilight', preview: '#141414' },
+            { value: 'night', label: 'Night', preview: '#0A0A0A' },
+            { value: 'midnight', label: 'Midnight', preview: '#0F0F23' }
+        ],
+        'Specialty Themes': [
+            { value: 'ayu-dark', label: 'Ayu Dark', preview: '#0A0E27' },
+            { value: 'ayu-mirage', label: 'Ayu Mirage', preview: '#1F2430' },
+            { value: 'lucario', label: 'Lucario', preview: '#2B3E50' },
+            { value: 'railscasts', label: 'Railscasts', preview: '#2B2B2B' },
+            { value: 'rubyblue', label: 'Ruby Blue', preview: '#112435' },
+            { value: 'seti', label: 'Seti', preview: '#151718' },
+            { value: 'juejin', label: 'Juejin', preview: '#1E1E1E' },
+            { value: 'yonce', label: 'Yoncé', preview: '#1C1C1C' }
+        ]
+    };
+
+    const languageModes = {
+        javascript: { mode: 'javascript', icon: '🟨', name: 'JavaScript' },
+        typescript: { mode: 'javascript', icon: '🔷', name: 'TypeScript' },
+        python: { mode: 'python', icon: '🐍', name: 'Python' },
+        java: { mode: 'clike', icon: '☕', name: 'Java' },
+        cpp: { mode: 'clike', icon: '⚡', name: 'C++' },
+        c: { mode: 'clike', icon: '🔵', name: 'C' },
+        go: { mode: 'go', icon: '🔵', name: 'Go' },
+        rust: { mode: 'rust', icon: '🦀', name: 'Rust' },
+        php: { mode: 'php', icon: '🐘', name: 'PHP' },
+        ruby: { mode: 'ruby', icon: '💎', name: 'Ruby' },
+        swift: { mode: 'swift', icon: '🍎', name: 'Swift' },
+        kotlin: { mode: 'clike', icon: '🟣', name: 'Kotlin' },
+        dart: { mode: 'dart', icon: '🎯', name: 'Dart' },
+        html: { mode: 'htmlmixed', icon: '🌐', name: 'HTML' },
+        css: { mode: 'css', icon: '🎨', name: 'CSS' },
+        sql: { mode: 'sql', icon: '🗃️', name: 'SQL' },
+        markdown: { mode: 'markdown', icon: '📝', name: 'Markdown' },
+        yaml: { mode: 'yaml', icon: '⚙️', name: 'YAML' },
+        xml: { mode: 'xml', icon: '📄', name: 'XML' },
+        shell: { mode: 'shell', icon: '💻', name: 'Shell' }
+    };
 
     useEffect(() => {
         async function init() {
-            editorRef.current = Codemirror.fromTextArea(
-                document.getElementById('realtimeEditor'),
-                {
-                    mode: {name: lang},
-                    theme: editorTheme,
-                    autoCloseTags: true,
-                    autoCloseBrackets: true,
-                    lineNumbers: true,
+            const textarea = document.getElementById('realtimeEditor');
+            if (!textarea) return;
+
+            editorRef.current = Codemirror.fromTextArea(textarea, {
+                mode: languageModes[lang]?.mode || 'javascript',
+                theme: editorTheme,
+                autoCloseTags: true,
+                autoCloseBrackets: true,
+                lineNumbers: showLineNumbers,
+                lineWrapping: wordWrap,
+                cursorBlinkRate: cursorBlinkRate,
+                indentUnit: 2,
+                tabSize: 2,
+                smartIndent: true,
+                electricChars: true,
+                matchBrackets: true,
+                autoRefresh: true,
+                styleActiveLine: true,
+                foldGutter: true,
+                gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
+                extraKeys: {
+                    'Ctrl-Space': 'autocomplete',
+                    'F11': () => toggleFullscreen(),
+                    'Esc': () => setIsFullscreen(false)
                 }
-            );
+            });
+
+            // Apply custom styling
+            const wrapper = editorRef.current.getWrapperElement();
+            wrapper.style.fontSize = `${fontSize}px`;
+            wrapper.style.lineHeight = lineHeight;
+            wrapper.style.height = '100%';
 
             editorRef.current.on('change', (instance, changes) => {
-                const {origin} = changes;
+                const { origin } = changes;
                 const code = instance.getValue();
                 onCodeChange(code);
                 if (origin !== 'setValue') {
-                    socketRef.current.emit(ACTIONS.CODE_CHANGE, {
+                    socketRef.current?.emit(ACTIONS.CODE_CHANGE, {
                         roomId,
                         code,
                     });
                 }
             });
 
+            // Set initial code sample
+            if (editorRef.current.getValue() === '') {
+                const sampleCode = getSampleCode(lang);
+                editorRef.current.setValue(sampleCode);
+            }
         }
         init();
-    }, [lang]);
+
+        return () => {
+            if (editorRef.current) {
+                editorRef.current.toTextArea();
+            }
+        };
+    }, [lang, editorTheme]);
+
+    // Update editor options when settings change
+    useEffect(() => {
+        if (editorRef.current) {
+            editorRef.current.setOption('lineNumbers', showLineNumbers);
+            editorRef.current.setOption('lineWrapping', wordWrap);
+            editorRef.current.setOption('cursorBlinkRate', cursorBlinkRate);
+            
+            const wrapper = editorRef.current.getWrapperElement();
+            wrapper.style.fontSize = `${fontSize}px`;
+            wrapper.style.lineHeight = lineHeight;
+            
+            editorRef.current.refresh();
+        }
+    }, [showLineNumbers, wordWrap, cursorBlinkRate, fontSize, lineHeight]);
 
     useEffect(() => {
         if (socketRef.current) {
-            socketRef.current.on(ACTIONS.CODE_CHANGE, ({code}) => {
-                if (code !== null) {
-                    editorRef.current.setValue(code);
+            socketRef.current.on(ACTIONS.CODE_CHANGE, ({ code }) => {
+                if (code !== null && editorRef.current) {
+                    const currentCode = editorRef.current.getValue();
+                    if (currentCode !== code) {
+                        editorRef.current.setValue(code);
+                    }
                 }
             });
         }
 
         return () => {
-            socketRef.current.off(ACTIONS.CODE_CHANGE);
+            socketRef.current?.off(ACTIONS.CODE_CHANGE);
         };
     }, [socketRef.current]);
 
+    const getSampleCode = (language) => {
+        const samples = {
+            javascript: `// Welcome to CodeSync Pro! 🚀
+console.log("Hello, World!");
+
+function fibonacci(n) {
+    if (n <= 1) return n;
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+console.log("Fibonacci sequence:");
+for (let i = 0; i < 10; i++) {
+    console.log(\`F(\${i}) = \${fibonacci(i)}\`);
+}`,
+            
+            python: `# Welcome to CodeSync Pro! 🚀
+print("Hello, World!")
+
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n - 1) + fibonacci(n - 2)
+
+print("Fibonacci sequence:")
+for i in range(10):
+    print(f"F({i}) = {fibonacci(i)}")`,
+    
+            java: `// Welcome to CodeSync Pro! 🚀
+public class HelloWorld {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+        
+        System.out.println("Fibonacci sequence:");
+        for (int i = 0; i < 10; i++) {
+            System.out.println("F(" + i + ") = " + fibonacci(i));
+        }
+    }
+    
+    public static int fibonacci(int n) {
+        if (n <= 1) return n;
+        return fibonacci(n - 1) + fibonacci(n - 2);
+    }
+}`,
+            
+            cpp: `// Welcome to CodeSync Pro! 🚀
+#include <iostream>
+using namespace std;
+
+int fibonacci(int n) {
+    if (n <= 1) return n;
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+int main() {
+    cout << "Hello, World!" << endl;
+    
+    cout << "Fibonacci sequence:" << endl;
+    for (int i = 0; i < 10; i++) {
+        cout << "F(" << i << ") = " << fibonacci(i) << endl;
+    }
+    
+    return 0;
+}`
+        };
+        
+        return samples[language] || samples.javascript;
+    };
+
+    const toggleFullscreen = () => {
+        const wrapper = editorRef.current?.getWrapperElement();
+        if (!wrapper) return;
+
+        if (!isFullscreen) {
+            wrapper.requestFullscreen?.();
+            setIsFullscreen(true);
+        } else {
+            document.exitFullscreen?.();
+            setIsFullscreen(false);
+        }
+    };
+
+    const copyCode = () => {
+        if (editorRef.current) {
+            navigator.clipboard.writeText(editorRef.current.getValue());
+        }
+    };
+
+    const downloadCode = () => {
+        if (editorRef.current) {
+            const code = editorRef.current.getValue();
+            const ext = languageModes[lang]?.mode === 'clike' ? 'cpp' : lang;
+            const blob = new Blob([code], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `code.${ext}`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    };
+
+    const formatCode = () => {
+        if (editorRef.current) {
+            const code = editorRef.current.getValue();
+            // Basic formatting - in a real app you'd use a proper formatter
+            const formatted = code.replace(/;/g, ';\n').replace(/{/g, '{\n').replace(/}/g, '\n}');
+            editorRef.current.setValue(formatted);
+        }
+    };
+
     return (
-        <textarea id="realtimeEditor"></textarea>
+        <div className={`editor-container ${isDark ? 'dark' : 'light'} ${isFullscreen ? 'fullscreen' : ''}`}>
+            {/* Enhanced Editor Toolbar */}
+            <div className="editor-toolbar">
+                <div className="toolbar-left">
+                    <div className="language-selector">
+                        <select 
+                            value={lang} 
+                            onChange={(e) => setLang(e.target.value)}
+                            className="language-select"
+                        >
+                            {Object.entries(languageModes).map(([key, { icon, name }]) => (
+                                <option key={key} value={key}>
+                                    {icon} {name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    
+                    <div className="theme-selector">
+                        <button 
+                            className="theme-button"
+                            onClick={() => setShowSettings(!showSettings)}
+                        >
+                            <FiSettings size={14} />
+                            <span>Theme</span>
+                            <FiChevronDown size={12} />
+                        </button>
+                        
+                        {showSettings && (
+                            <div className="theme-dropdown">
+                                {Object.entries(themeCategories).map(([category, themes]) => (
+                                    <div key={category} className="theme-category">
+                                        <div className="category-header">{category}</div>
+                                        <div className="theme-grid">
+                                            {themes.map((theme) => (
+                                                <button
+                                                    key={theme.value}
+                                                    className={`theme-option ${editorTheme === theme.value ? 'active' : ''}`}
+                                                    onClick={() => {
+                                                        setEditorTheme(theme.value);
+                                                        setShowSettings(false);
+                                                    }}
+                                                >
+                                                    <div 
+                                                        className="theme-preview" 
+                                                        style={{ backgroundColor: theme.preview }}
+                                                    ></div>
+                                                    <span className="theme-name">{theme.label}</span>
+                                                    {editorTheme === theme.value && <FiCheck size={12} />}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                                
+                                <div className="settings-section">
+                                    <h4>Editor Settings</h4>
+                                    
+                                    <div className="setting-row">
+                                        <label>Font Size</label>
+                                        <input
+                                            type="range"
+                                            min="10"
+                                            max="24"
+                                            value={fontSize}
+                                            onChange={(e) => setFontSize(Number(e.target.value))}
+                                        />
+                                        <span>{fontSize}px</span>
+                                    </div>
+                                    
+                                    <div className="setting-row">
+                                        <label>Line Height</label>
+                                        <input
+                                            type="range"
+                                            min="1.2"
+                                            max="2.0"
+                                            step="0.1"
+                                            value={lineHeight}
+                                            onChange={(e) => setLineHeight(Number(e.target.value))}
+                                        />
+                                        <span>{lineHeight}</span>
+                                    </div>
+                                    
+                                    <div className="setting-toggle">
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                                checked={showLineNumbers}
+                                                onChange={(e) => setShowLineNumbers(e.target.checked)}
+                                            />
+                                            Line Numbers
+                                        </label>
+                                    </div>
+                                    
+                                    <div className="setting-toggle">
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                                checked={wordWrap}
+                                                onChange={(e) => setWordWrap(e.target.checked)}
+                                            />
+                                            Word Wrap
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                
+                <div className="toolbar-right">
+                    <button className="toolbar-btn" onClick={copyCode} title="Copy Code">
+                        <FiCopy size={14} />
+                    </button>
+                    <button className="toolbar-btn" onClick={downloadCode} title="Download Code">
+                        <FiDownload size={14} />
+                    </button>
+                    <button className="toolbar-btn" onClick={formatCode} title="Format Code">
+                        <FiZap size={14} />
+                    </button>
+                    <button className="toolbar-btn" onClick={toggleFullscreen} title="Toggle Fullscreen (F11)">
+                        {isFullscreen ? <FiMinimize2 size={14} /> : <FiMaximize2 size={14} />}
+                    </button>
+                </div>
+            </div>
+            
+            {/* CodeMirror Editor */}
+            <div className="editor-wrapper">
+                <textarea id="realtimeEditor"></textarea>
+            </div>
+            
+            {/* Click outside to close settings */}
+            {showSettings && (
+                <div 
+                    className="settings-overlay" 
+                    onClick={() => setShowSettings(false)}
+                ></div>
+            )}
+        </div>
     );
 };
 

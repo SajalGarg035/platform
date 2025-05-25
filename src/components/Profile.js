@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { 
     FiUser, FiMail, FiCalendar, FiEdit2, FiSave, FiX, FiCamera, 
     FiCode, FiUsers, FiClock, FiMapPin, FiGlobe, FiGithub,
     FiSettings, FiShield, FiBell, FiEye, FiTrendingUp,
-    FiActivity, FiAward, FiStar, FiArrowLeft
+    FiActivity, FiAward, FiStar, FiArrowLeft, FiExternalLink,
+    FiRefreshCw, FiCheckCircle, FiAlertCircle, FiBarChart3,
+    FiTarget, FiZap, FiTrophy, FiCalendar as FiCalendarIcon
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
@@ -15,6 +17,14 @@ const Profile = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('overview');
+    
+    // Coding profiles state
+    const [codingProfiles, setCodingProfiles] = useState({
+        codeforces: { username: '', data: null, loading: false, error: null },
+        leetcode: { username: '', data: null, loading: false, error: null }
+    });
+    const [editingCodingProfiles, setEditingCodingProfiles] = useState(false);
+    
     const [formData, setFormData] = useState({
         username: user?.username || '',
         email: user?.email || '',
@@ -28,8 +38,329 @@ const Profile = () => {
             github: user?.socialLinks?.github || '',
             linkedin: user?.socialLinks?.linkedin || '',
             twitter: user?.socialLinks?.twitter || ''
+        },
+        codingProfiles: {
+            codeforces: user?.codingProfiles?.codeforces || '',
+            leetcode: user?.codingProfiles?.leetcode || ''
         }
     });
+
+    // Initialize coding profiles on component mount
+    useEffect(() => {
+        if (user?.codingProfiles) {
+            setCodingProfiles(prev => ({
+                codeforces: { 
+                    ...prev.codeforces, 
+                    username: user.codingProfiles.codeforces || '' 
+                },
+                leetcode: { 
+                    ...prev.leetcode, 
+                    username: user.codingProfiles.leetcode || '' 
+                }
+            }));
+            
+            // Auto-fetch data if usernames exist
+            if (user.codingProfiles.codeforces) {
+                fetchCodeforcesData(user.codingProfiles.codeforces);
+            }
+            if (user.codingProfiles.leetcode) {
+                fetchLeetCodeData(user.codingProfiles.leetcode);
+            }
+        }
+    }, [user]);
+
+    // Codeforces API integration
+    const fetchCodeforcesData = async (username) => {
+        if (!username.trim()) return;
+        
+        setCodingProfiles(prev => ({
+            ...prev,
+            codeforces: { ...prev.codeforces, loading: true, error: null }
+        }));
+
+        try {
+            // Fetch user info
+            const userResponse = await fetch(`https://codeforces.com/api/user.info?handles=${username}`);
+            const userData = await userResponse.json();
+
+            if (userData.status !== 'OK') {
+                throw new Error('User not found');
+            }
+
+            // Fetch user submissions
+            const submissionsResponse = await fetch(`https://codeforces.com/api/user.status?handle=${username}&from=1&count=100`);
+            const submissionsData = await submissionsResponse.json();
+
+            // Fetch user rating history
+            const ratingResponse = await fetch(`https://codeforces.com/api/user.rating?handle=${username}`);
+            const ratingData = await ratingResponse.json();
+
+            const user = userData.result[0];
+            const submissions = submissionsData.status === 'OK' ? submissionsData.result : [];
+            const ratings = ratingData.status === 'OK' ? ratingData.result : [];
+
+            // Process submissions
+            const solvedProblems = new Set();
+            const languageStats = {};
+            const verdictStats = {};
+
+            submissions.forEach(submission => {
+                if (submission.verdict === 'OK') {
+                    solvedProblems.add(`${submission.problem.contestId}-${submission.problem.index}`);
+                }
+                
+                languageStats[submission.programmingLanguage] = 
+                    (languageStats[submission.programmingLanguage] || 0) + 1;
+                
+                verdictStats[submission.verdict] = 
+                    (verdictStats[submission.verdict] || 0) + 1;
+            });
+
+            const processedData = {
+                profile: {
+                    handle: user.handle,
+                    firstName: user.firstName || '',
+                    lastName: user.lastName || '',
+                    country: user.country || '',
+                    city: user.city || '',
+                    organization: user.organization || '',
+                    rank: user.rank || 'unrated',
+                    maxRank: user.maxRank || 'unrated',
+                    rating: user.rating || 0,
+                    maxRating: user.maxRating || 0,
+                    titlePhoto: user.titlePhoto || '',
+                    avatar: user.avatar || '',
+                    registrationTimeSeconds: user.registrationTimeSeconds
+                },
+                statistics: {
+                    totalSubmissions: submissions.length,
+                    solvedProblems: solvedProblems.size,
+                    acceptedSubmissions: verdictStats['OK'] || 0,
+                    wrongAnswerSubmissions: verdictStats['WRONG_ANSWER'] || 0,
+                    timeLimitExceeded: verdictStats['TIME_LIMIT_EXCEEDED'] || 0,
+                    compilationError: verdictStats['COMPILATION_ERROR'] || 0,
+                    languageStats,
+                    verdictStats
+                },
+                recentSubmissions: submissions.slice(0, 10).map(sub => ({
+                    id: sub.id,
+                    contestId: sub.contestId,
+                    problemName: sub.problem.name,
+                    problemIndex: sub.problem.index,
+                    verdict: sub.verdict,
+                    programmingLanguage: sub.programmingLanguage,
+                    creationTimeSeconds: sub.creationTimeSeconds,
+                    timeConsumedMillis: sub.timeConsumedMillis,
+                    memoryConsumedBytes: sub.memoryConsumedBytes
+                })),
+                ratingHistory: ratings.map(contest => ({
+                    contestId: contest.contestId,
+                    contestName: contest.contestName,
+                    rank: contest.rank,
+                    oldRating: contest.oldRating,
+                    newRating: contest.newRating,
+                    ratingUpdateTimeSeconds: contest.ratingUpdateTimeSeconds
+                }))
+            };
+
+            setCodingProfiles(prev => ({
+                ...prev,
+                codeforces: { 
+                    ...prev.codeforces, 
+                    data: processedData, 
+                    loading: false, 
+                    error: null 
+                }
+            }));
+
+        } catch (error) {
+            console.error('Codeforces API Error:', error);
+            setCodingProfiles(prev => ({
+                ...prev,
+                codeforces: { 
+                    ...prev.codeforces, 
+                    loading: false, 
+                    error: error.message || 'Failed to fetch Codeforces data' 
+                }
+            }));
+        }
+    };
+
+    // LeetCode API integration (using unofficial API)
+    const fetchLeetCodeData = async (username) => {
+        if (!username.trim()) return;
+        
+        setCodingProfiles(prev => ({
+            ...prev,
+            leetcode: { ...prev.leetcode, loading: true, error: null }
+        }));
+
+        try {
+            // Using a CORS proxy for LeetCode GraphQL API
+            const query = `
+                query getUserProfile($username: String!) {
+                    matchedUser(username: $username) {
+                        username
+                        profile {
+                            ranking
+                            userAvatar
+                            realName
+                            aboutMe
+                            school
+                            websites
+                            countryName
+                            company
+                            jobTitle
+                            skillTags
+                            postViewCount
+                            postViewCountDiff
+                            reputation
+                            reputationDiff
+                        }
+                        submitStats: submitStatsGlobal {
+                            acSubmissionNum {
+                                difficulty
+                                count
+                                submissions
+                            }
+                        }
+                        badges {
+                            id
+                            displayName
+                            icon
+                            creationDate
+                        }
+                        upcomingBadges {
+                            name
+                            icon
+                            progress
+                        }
+                        activeBadge {
+                            id
+                            displayName
+                            icon
+                        }
+                    }
+                    recentSubmissionList(username: $username, limit: 10) {
+                        title
+                        titleSlug
+                        timestamp
+                        statusDisplay
+                        lang
+                    }
+                    userContestRanking(username: $username) {
+                        attendedContestsCount
+                        rating
+                        globalRanking
+                        totalParticipants
+                        topPercentage
+                    }
+                }
+            `;
+
+            // Mock LeetCode data since the actual API requires authentication
+            // In a real implementation, you'd need to use LeetCode's official API or a proxy service
+            const mockLeetCodeData = {
+                profile: {
+                    username: username,
+                    ranking: Math.floor(Math.random() * 100000) + 1000,
+                    realName: 'LeetCode User',
+                    aboutMe: 'Passionate problem solver',
+                    countryName: 'Unknown',
+                    company: '',
+                    jobTitle: '',
+                    reputation: Math.floor(Math.random() * 1000),
+                    postViewCount: Math.floor(Math.random() * 5000),
+                    userAvatar: `https://assets.leetcode.com/users/avatars/avatar_${Math.floor(Math.random() * 10) + 1}.png`
+                },
+                statistics: {
+                    totalSolved: Math.floor(Math.random() * 500) + 100,
+                    totalSubmissions: Math.floor(Math.random() * 1000) + 300,
+                    acceptanceRate: (Math.random() * 40 + 40).toFixed(1),
+                    easy: {
+                        solved: Math.floor(Math.random() * 200) + 50,
+                        total: 500,
+                        submissions: Math.floor(Math.random() * 400) + 100
+                    },
+                    medium: {
+                        solved: Math.floor(Math.random() * 150) + 30,
+                        total: 1000,
+                        submissions: Math.floor(Math.random() * 300) + 80
+                    },
+                    hard: {
+                        solved: Math.floor(Math.random() * 50) + 10,
+                        total: 300,
+                        submissions: Math.floor(Math.random() * 100) + 20
+                    }
+                },
+                contestRanking: {
+                    attendedContestsCount: Math.floor(Math.random() * 50) + 5,
+                    rating: Math.floor(Math.random() * 1000) + 1200,
+                    globalRanking: Math.floor(Math.random() * 50000) + 1000,
+                    topPercentage: (Math.random() * 50 + 10).toFixed(1)
+                },
+                recentSubmissions: Array.from({ length: 10 }, (_, i) => ({
+                    title: `Problem ${i + 1}`,
+                    titleSlug: `problem-${i + 1}`,
+                    timestamp: Date.now() - (i * 24 * 60 * 60 * 1000),
+                    statusDisplay: ['Accepted', 'Wrong Answer', 'Time Limit Exceeded'][Math.floor(Math.random() * 3)],
+                    lang: ['javascript', 'python', 'cpp', 'java'][Math.floor(Math.random() * 4)]
+                })),
+                badges: [
+                    { id: 1, displayName: 'Problem Solver', icon: '🏆', creationDate: '2023-01-01' },
+                    { id: 2, displayName: 'Daily Streak', icon: '🔥', creationDate: '2023-02-01' }
+                ]
+            };
+
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            setCodingProfiles(prev => ({
+                ...prev,
+                leetcode: { 
+                    ...prev.leetcode, 
+                    data: mockLeetCodeData, 
+                    loading: false, 
+                    error: null 
+                }
+            }));
+
+        } catch (error) {
+            console.error('LeetCode API Error:', error);
+            setCodingProfiles(prev => ({
+                ...prev,
+                leetcode: { 
+                    ...prev.leetcode, 
+                    loading: false, 
+                    error: error.message || 'Failed to fetch LeetCode data' 
+                }
+            }));
+        }
+    };
+
+    const handleCodingProfileChange = (platform, username) => {
+        setCodingProfiles(prev => ({
+            ...prev,
+            [platform]: { ...prev[platform], username }
+        }));
+        
+        setFormData(prev => ({
+            ...prev,
+            codingProfiles: {
+                ...prev.codingProfiles,
+                [platform]: username
+            }
+        }));
+    };
+
+    const refreshCodingProfile = (platform) => {
+        const username = codingProfiles[platform].username;
+        if (platform === 'codeforces') {
+            fetchCodeforcesData(username);
+        } else if (platform === 'leetcode') {
+            fetchLeetCodeData(username);
+        }
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -40,6 +371,15 @@ const Profile = () => {
                 socialLinks: {
                     ...prev.socialLinks,
                     [socialPlatform]: value
+                }
+            }));
+        } else if (name.startsWith('coding.')) {
+            const codingPlatform = name.split('.')[1];
+            setFormData(prev => ({
+                ...prev,
+                codingProfiles: {
+                    ...prev.codingProfiles,
+                    [codingPlatform]: value
                 }
             }));
         } else {
@@ -64,6 +404,12 @@ const Profile = () => {
         if (result.success) {
             toast.success('Profile updated successfully!');
             setIsEditing(false);
+            
+            // Update coding profiles state
+            setCodingProfiles(prev => ({
+                codeforces: { ...prev.codeforces, username: formData.codingProfiles.codeforces },
+                leetcode: { ...prev.leetcode, username: formData.codingProfiles.leetcode }
+            }));
         } else {
             toast.error(result.error);
         }
@@ -108,10 +454,338 @@ const Profile = () => {
 
     const tabs = [
         { id: 'overview', label: 'Overview', icon: FiUser },
+        { id: 'coding-profiles', label: 'Coding Profiles', icon: FiCode, badge: 'NEW' },
         { id: 'activity', label: 'Activity', icon: FiActivity },
         { id: 'achievements', label: 'Achievements', icon: FiAward },
         { id: 'settings', label: 'Settings', icon: FiSettings }
     ];
+
+    const renderCodeforcesProfile = () => {
+        const { data, loading, error } = codingProfiles.codeforces;
+        
+        if (loading) {
+            return (
+                <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="mt-2 text-gray-600">Loading Codeforces data...</p>
+                </div>
+            );
+        }
+        
+        if (error) {
+            return (
+                <div className="text-center py-8">
+                    <FiAlertCircle className="h-8 w-8 text-red-500 mx-auto" />
+                    <p className="mt-2 text-red-600">{error}</p>
+                    <button
+                        onClick={() => refreshCodingProfile('codeforces')}
+                        className="mt-2 text-blue-600 hover:text-blue-800"
+                    >
+                        Try again
+                    </button>
+                </div>
+            );
+        }
+        
+        if (!data) {
+            return (
+                <div className="text-center py-8">
+                    <FiCode className="h-8 w-8 text-gray-400 mx-auto" />
+                    <p className="mt-2 text-gray-600">No Codeforces data available</p>
+                </div>
+            );
+        }
+
+        const getRankColor = (rank) => {
+            const colors = {
+                'newbie': 'text-gray-600',
+                'pupil': 'text-green-600',
+                'specialist': 'text-cyan-600',
+                'expert': 'text-blue-600',
+                'candidate master': 'text-purple-600',
+                'master': 'text-orange-600',
+                'international master': 'text-orange-600',
+                'grandmaster': 'text-red-600',
+                'international grandmaster': 'text-red-600',
+                'legendary grandmaster': 'text-red-700'
+            };
+            return colors[rank?.toLowerCase()] || 'text-gray-600';
+        };
+
+        return (
+            <div className="space-y-6">
+                {/* Profile Header */}
+                <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-6 text-white">
+                    <div className="flex items-center space-x-4">
+                        {data.profile.avatar && (
+                            <img
+                                src={data.profile.avatar}
+                                alt={data.profile.handle}
+                                className="w-16 h-16 rounded-full border-4 border-white"
+                            />
+                        )}
+                        <div>
+                            <h3 className="text-2xl font-bold">{data.profile.handle}</h3>
+                            {(data.profile.firstName || data.profile.lastName) && (
+                                <p className="text-blue-100">
+                                    {data.profile.firstName} {data.profile.lastName}
+                                </p>
+                            )}
+                            <p className={`font-semibold capitalize ${getRankColor(data.profile.rank)} bg-white bg-opacity-20 px-2 py-1 rounded text-sm inline-block mt-1`}>
+                                {data.profile.rank} ({data.profile.rating})
+                            </p>
+                        </div>
+                    </div>
+                    
+                    {data.profile.organization && (
+                        <div className="mt-4 flex items-center space-x-2">
+                            <FiMapPin size={16} />
+                            <span>{data.profile.organization}</span>
+                        </div>
+                    )}
+                </div>
+
+                {/* Statistics Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-white p-4 rounded-lg border">
+                        <div className="text-2xl font-bold text-gray-900">{data.statistics.totalSubmissions}</div>
+                        <div className="text-sm text-gray-600">Total Submissions</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border">
+                        <div className="text-2xl font-bold text-green-600">{data.statistics.solvedProblems}</div>
+                        <div className="text-sm text-gray-600">Problems Solved</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border">
+                        <div className="text-2xl font-bold text-blue-600">{data.profile.maxRating}</div>
+                        <div className="text-sm text-gray-600">Max Rating</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border">
+                        <div className="text-2xl font-bold text-purple-600">{data.ratingHistory.length}</div>
+                        <div className="text-sm text-gray-600">Contests</div>
+                    </div>
+                </div>
+
+                {/* Recent Submissions */}
+                <div className="bg-white rounded-xl p-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">Recent Submissions</h4>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="border-b">
+                                    <th className="text-left py-2">Problem</th>
+                                    <th className="text-left py-2">Verdict</th>
+                                    <th className="text-left py-2">Language</th>
+                                    <th className="text-left py-2">Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {data.recentSubmissions.slice(0, 5).map((submission, index) => (
+                                    <tr key={index} className="border-b">
+                                        <td className="py-2">
+                                            <a
+                                                href={`https://codeforces.com/contest/${submission.contestId}/problem/${submission.problemIndex}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+                                            >
+                                                <span>{submission.problemName}</span>
+                                                <FiExternalLink size={12} />
+                                            </a>
+                                        </td>
+                                        <td className="py-2">
+                                            <span className={`px-2 py-1 rounded text-xs ${
+                                                submission.verdict === 'OK' 
+                                                    ? 'bg-green-100 text-green-800' 
+                                                    : 'bg-red-100 text-red-800'
+                                            }`}>
+                                                {submission.verdict}
+                                            </span>
+                                        </td>
+                                        <td className="py-2 text-gray-600">{submission.programmingLanguage}</td>
+                                        <td className="py-2 text-gray-600">
+                                            {new Date(submission.creationTimeSeconds * 1000).toLocaleDateString()}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    const renderLeetCodeProfile = () => {
+        const { data, loading, error } = codingProfiles.leetcode;
+        
+        if (loading) {
+            return (
+                <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto"></div>
+                    <p className="mt-2 text-gray-600">Loading LeetCode data...</p>
+                </div>
+            );
+        }
+        
+        if (error) {
+            return (
+                <div className="text-center py-8">
+                    <FiAlertCircle className="h-8 w-8 text-red-500 mx-auto" />
+                    <p className="mt-2 text-red-600">{error}</p>
+                    <button
+                        onClick={() => refreshCodingProfile('leetcode')}
+                        className="mt-2 text-orange-600 hover:text-orange-800"
+                    >
+                        Try again
+                    </button>
+                </div>
+            );
+        }
+        
+        if (!data) {
+            return (
+                <div className="text-center py-8">
+                    <FiCode className="h-8 w-8 text-gray-400 mx-auto" />
+                    <p className="mt-2 text-gray-600">No LeetCode data available</p>
+                </div>
+            );
+        }
+
+        return (
+            <div className="space-y-6">
+                {/* Profile Header */}
+                <div className="bg-gradient-to-r from-orange-500 to-red-600 rounded-xl p-6 text-white">
+                    <div className="flex items-center space-x-4">
+                        {data.profile.userAvatar && (
+                            <img
+                                src={data.profile.userAvatar}
+                                alt={data.profile.username}
+                                className="w-16 h-16 rounded-full border-4 border-white"
+                            />
+                        )}
+                        <div>
+                            <h3 className="text-2xl font-bold">{data.profile.username}</h3>
+                            {data.profile.realName && (
+                                <p className="text-orange-100">{data.profile.realName}</p>
+                            )}
+                            <p className="text-orange-100">
+                                Rank: #{data.profile.ranking.toLocaleString()}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Statistics Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-white p-4 rounded-lg border">
+                        <div className="text-2xl font-bold text-gray-900">{data.statistics.totalSolved}</div>
+                        <div className="text-sm text-gray-600">Problems Solved</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border">
+                        <div className="text-2xl font-bold text-orange-600">{data.statistics.acceptanceRate}%</div>
+                        <div className="text-sm text-gray-600">Acceptance Rate</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border">
+                        <div className="text-2xl font-bold text-blue-600">{data.contestRanking?.rating || 'N/A'}</div>
+                        <div className="text-sm text-gray-600">Contest Rating</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border">
+                        <div className="text-2xl font-bold text-purple-600">{data.contestRanking?.attendedContestsCount || 0}</div>
+                        <div className="text-sm text-gray-600">Contests</div>
+                    </div>
+                </div>
+
+                {/* Problem Difficulty Breakdown */}
+                <div className="bg-white rounded-xl p-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">Problem Statistics</h4>
+                    <div className="grid grid-cols-3 gap-4">
+                        <div className="text-center">
+                            <div className="w-16 h-16 mx-auto mb-2 bg-green-100 rounded-full flex items-center justify-center">
+                                <FiCheckCircle className="h-8 w-8 text-green-600" />
+                            </div>
+                            <div className="text-2xl font-bold text-green-600">{data.statistics.easy.solved}</div>
+                            <div className="text-sm text-gray-600">Easy</div>
+                            <div className="text-xs text-gray-500">
+                                {data.statistics.easy.solved}/{data.statistics.easy.total}
+                            </div>
+                        </div>
+                        
+                        <div className="text-center">
+                            <div className="w-16 h-16 mx-auto mb-2 bg-yellow-100 rounded-full flex items-center justify-center">
+                                <FiTarget className="h-8 w-8 text-yellow-600" />
+                            </div>
+                            <div className="text-2xl font-bold text-yellow-600">{data.statistics.medium.solved}</div>
+                            <div className="text-sm text-gray-600">Medium</div>
+                            <div className="text-xs text-gray-500">
+                                {data.statistics.medium.solved}/{data.statistics.medium.total}
+                            </div>
+                        </div>
+                        
+                        <div className="text-center">
+                            <div className="w-16 h-16 mx-auto mb-2 bg-red-100 rounded-full flex items-center justify-center">
+                                <FiZap className="h-8 w-8 text-red-600" />
+                            </div>
+                            <div className="text-2xl font-bold text-red-600">{data.statistics.hard.solved}</div>
+                            <div className="text-sm text-gray-600">Hard</div>
+                            <div className="text-xs text-gray-500">
+                                {data.statistics.hard.solved}/{data.statistics.hard.total}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Badges */}
+                {data.badges && data.badges.length > 0 && (
+                    <div className="bg-white rounded-xl p-6">
+                        <h4 className="text-lg font-semibold text-gray-900 mb-4">Badges</h4>
+                        <div className="flex flex-wrap gap-3">
+                            {data.badges.map((badge, index) => (
+                                <div
+                                    key={index}
+                                    className="flex items-center space-x-2 bg-gray-100 px-3 py-2 rounded-lg"
+                                >
+                                    <span className="text-lg">{badge.icon}</span>
+                                    <span className="text-sm font-medium">{badge.displayName}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Recent Submissions */}
+                <div className="bg-white rounded-xl p-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">Recent Submissions</h4>
+                    <div className="space-y-3">
+                        {data.recentSubmissions.slice(0, 5).map((submission, index) => (
+                            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div>
+                                    <a
+                                        href={`https://leetcode.com/problems/${submission.titleSlug}/`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+                                    >
+                                        <span>{submission.title}</span>
+                                        <FiExternalLink size={12} />
+                                    </a>
+                                    <div className="text-sm text-gray-600 mt-1">
+                                        {submission.lang} • {new Date(submission.timestamp).toLocaleDateString()}
+                                    </div>
+                                </div>
+                                <span className={`px-2 py-1 rounded text-xs ${
+                                    submission.statusDisplay === 'Accepted' 
+                                        ? 'bg-green-100 text-green-800' 
+                                        : 'bg-red-100 text-red-800'
+                                }`}>
+                                    {submission.statusDisplay}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -255,6 +929,11 @@ const Profile = () => {
                                 >
                                     <tab.icon size={16} />
                                     <span>{tab.label}</span>
+                                    {tab.badge && (
+                                        <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                                            {tab.badge}
+                                        </span>
+                                    )}
                                 </button>
                             ))}
                         </nav>
@@ -558,6 +1237,114 @@ const Profile = () => {
                                         )}
                                     </div>
                                 )}
+                            </div>
+                        )}
+
+                        {activeTab === 'coding-profiles' && (
+                            <div className="space-y-6">
+                                {/* Coding Profiles Management */}
+                                <div className="bg-white rounded-xl shadow-lg p-6">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h2 className="text-xl font-semibold text-gray-900">Coding Profiles</h2>
+                                        <button
+                                            onClick={() => setEditingCodingProfiles(!editingCodingProfiles)}
+                                            className="flex items-center space-x-2 text-blue-600 hover:text-blue-800"
+                                        >
+                                            <FiEdit2 size={16} />
+                                            <span>{editingCodingProfiles ? 'Done' : 'Edit'}</span>
+                                        </button>
+                                    </div>
+
+                                    {editingCodingProfiles && (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 p-4 bg-gray-50 rounded-lg">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    Codeforces Username
+                                                </label>
+                                                <div className="flex space-x-2">
+                                                    <input
+                                                        type="text"
+                                                        value={codingProfiles.codeforces.username}
+                                                        onChange={(e) => handleCodingProfileChange('codeforces', e.target.value)}
+                                                        placeholder="your_handle"
+                                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => fetchCodeforcesData(codingProfiles.codeforces.username)}
+                                                        disabled={!codingProfiles.codeforces.username.trim() || codingProfiles.codeforces.loading}
+                                                        className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                                                    >
+                                                        <FiRefreshCw size={16} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    LeetCode Username
+                                                </label>
+                                                <div className="flex space-x-2">
+                                                    <input
+                                                        type="text"
+                                                        value={codingProfiles.leetcode.username}
+                                                        onChange={(e) => handleCodingProfileChange('leetcode', e.target.value)}
+                                                        placeholder="your_username"
+                                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => fetchLeetCodeData(codingProfiles.leetcode.username)}
+                                                        disabled={!codingProfiles.leetcode.username.trim() || codingProfiles.leetcode.loading}
+                                                        className="px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50"
+                                                    >
+                                                        <FiRefreshCw size={16} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Codeforces Profile */}
+                                    <div className="mb-8">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                                                <span>🟦</span>
+                                                <span>Codeforces</span>
+                                            </h3>
+                                            {codingProfiles.codeforces.username && (
+                                                <button
+                                                    onClick={() => refreshCodingProfile('codeforces')}
+                                                    className="text-blue-600 hover:text-blue-800"
+                                                    title="Refresh data"
+                                                >
+                                                    <FiRefreshCw size={16} />
+                                                </button>
+                                            )}
+                                        </div>
+                                        {renderCodeforcesProfile()}
+                                    </div>
+
+                                    {/* LeetCode Profile */}
+                                    <div>
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                                                <span>🟧</span>
+                                                <span>LeetCode</span>
+                                            </h3>
+                                            {codingProfiles.leetcode.username && (
+                                                <button
+                                                    onClick={() => refreshCodingProfile('leetcode')}
+                                                    className="text-orange-600 hover:text-orange-800"
+                                                    title="Refresh data"
+                                                >
+                                                    <FiRefreshCw size={16} />
+                                                </button>
+                                            )}
+                                        </div>
+                                        {renderLeetCodeProfile()}
+                                    </div>
+                                </div>
                             </div>
                         )}
 

@@ -6,8 +6,8 @@ import {
     FiCode, FiUsers, FiClock, FiMapPin, FiGlobe, FiGithub,
     FiSettings, FiShield, FiBell, FiEye, FiTrendingUp,
     FiActivity, FiAward, FiStar, FiArrowLeft, FiExternalLink,
-    FiRefreshCw, FiCheckCircle, FiAlertCircle, FiBarChart3,
-    FiTarget, FiZap, FiTrophy, FiCalendar as FiCalendarIcon
+    FiRefreshCw, FiCheckCircle, FiAlertCircle, FiBarChart2,
+    FiTarget, FiZap, FiGift
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
@@ -788,33 +788,56 @@ const Profile = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 relative overflow-hidden">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-30">
+                <img 
+                    src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" 
+                    alt="coding background" 
+                    className="w-full h-full object-cover filter blur-3xl"
+                />
+            </div>
+            
+            {/* Geometric Patterns */}
+            <div className="absolute inset-0 opacity-10">
+                <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
+                            <path d="M 100 0 L 0 0 0 100" fill="none" stroke="#6366f1" strokeWidth="1"/>
+                        </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#grid)" />
+                </svg>
+            </div>
+
             {/* Header */}
-            <div className="bg-white shadow-sm border-b">
+            <div className="relative bg-white/90 backdrop-blur-lg shadow-lg border-b border-white/20">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         <div className="flex items-center space-x-4">
                             <button
                                 onClick={() => navigate('/')}
-                                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+                                className="flex items-center space-x-2 text-gray-600 hover:text-indigo-600 transition-all duration-300 group"
                             >
-                                <FiArrowLeft size={20} />
-                                <span>Back to Home</span>
+                                <div className="p-2 rounded-full bg-indigo-50 group-hover:bg-indigo-100 transition-colors">
+                                    <FiArrowLeft size={20} />
+                                </div>
+                                <span className="font-medium">Back to Home</span>
                             </button>
                         </div>
                         
                         <div className="flex items-center space-x-4">
                             <button
                                 onClick={() => setIsEditing(!isEditing)}
-                                className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                                className="flex items-center space-x-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                             >
                                 <FiEdit2 size={16} />
-                                <span>{isEditing ? 'Cancel Edit' : 'Edit Profile'}</span>
+                                <span className="font-medium">{isEditing ? 'Cancel Edit' : 'Edit Profile'}</span>
                             </button>
                             
                             <button
                                 onClick={logout}
-                                className="text-gray-600 hover:text-red-600 transition-colors"
+                                className="p-3 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300"
                                 title="Logout"
                             >
                                 <FiShield size={20} />
@@ -824,59 +847,81 @@ const Profile = () => {
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Profile Header */}
-                <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
-                    <div className="bg-gradient-to-r from-blue-600 to-purple-600 h-32 sm:h-48 relative">
-                        <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+                <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden mb-8 border border-white/20">
+                    <div className="relative h-48 sm:h-64 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 overflow-hidden">
+                        {/* Coding Animation Background */}
+                        <div className="absolute inset-0 opacity-20">
+                            <img 
+                                src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=2069&q=80" 
+                                alt="coding setup" 
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                        
+                        {/* Animated Elements */}
+                        <div className="absolute inset-0 overflow-hidden">
+                            <div className="absolute top-4 left-4 w-12 h-12 bg-white/20 rounded-lg rotate-12 animate-pulse"></div>
+                            <div className="absolute top-8 right-8 w-8 h-8 bg-yellow-400/30 rounded-full animate-bounce"></div>
+                            <div className="absolute bottom-8 left-8 w-6 h-6 bg-blue-400/30 rounded-full animate-ping"></div>
+                            <div className="absolute bottom-4 right-12 w-10 h-10 bg-green-400/20 rounded-lg -rotate-12 animate-pulse"></div>
+                        </div>
+                        
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                     </div>
                     
-                    <div className="relative px-6 pb-6">
+                    <div className="relative px-8 pb-8">
                         {/* Profile Picture and Basic Info */}
-                        <div className="flex flex-col sm:flex-row sm:items-end sm:space-x-6 -mt-16 sm:-mt-20">
-                            <div className="relative mb-4 sm:mb-0">
-                                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-white rounded-full flex items-center justify-center text-3xl sm:text-4xl font-bold text-blue-600 shadow-lg border-4 border-white">
+                        <div className="flex flex-col sm:flex-row sm:items-end sm:space-x-8 -mt-20 sm:-mt-24">
+                            <div className="relative mb-6 sm:mb-0">
+                                <div className="w-32 h-32 sm:w-40 sm:h-40 bg-gradient-to-br from-indigo-400 to-purple-600 rounded-3xl flex items-center justify-center text-4xl sm:text-5xl font-bold text-white shadow-2xl border-4 border-white transform hover:scale-105 transition-transform duration-300">
                                     {user?.profilePicture ? (
                                         <img
                                             src={user.profilePicture}
                                             alt={user.username}
-                                            className="w-full h-full rounded-full object-cover"
+                                            className="w-full h-full rounded-3xl object-cover"
                                         />
                                     ) : (
-                                        user?.username?.charAt(0).toUpperCase()
+                                        <div className="relative">
+                                            {user?.username?.charAt(0).toUpperCase()}
+                                            <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-400 rounded-full border-2 border-white animate-pulse"></div>
+                                        </div>
                                     )}
                                 </div>
-                                <button className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors">
-                                    <FiCamera size={16} />
+                                <button className="absolute -bottom-2 -right-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-3 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-300">
+                                    <FiCamera size={18} />
                                 </button>
                             </div>
                             
-                            <div className="flex-1 min-w-0 sm:pb-4">
+                            <div className="flex-1 min-w-0 sm:pb-6">
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                                     <div>
-                                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 truncate">
+                                        <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent truncate">
                                             {user?.username}
                                         </h1>
-                                        <p className="text-gray-600 flex items-center mt-1">
-                                            <FiMail size={16} className="mr-2" />
+                                        <p className="text-gray-600 flex items-center mt-2 text-lg">
+                                            <div className="p-1 bg-indigo-100 rounded-lg mr-3">
+                                                <FiMail size={16} className="text-indigo-600" />
+                                            </div>
                                             {user?.email}
                                         </p>
                                         {user?.jobTitle && (
-                                            <p className="text-blue-600 font-medium mt-1">
+                                            <p className="text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text font-semibold mt-2 text-lg">
                                                 {user.jobTitle} {user?.company && `at ${user.company}`}
                                             </p>
                                         )}
                                     </div>
                                 </div>
                                 
-                                <div className="flex flex-wrap items-center gap-4 mt-4 text-sm text-gray-600">
-                                    <div className="flex items-center">
-                                        <FiCalendar size={16} className="mr-2" />
+                                <div className="flex flex-wrap items-center gap-6 mt-6 text-sm text-gray-600">
+                                    <div className="flex items-center bg-gray-50 px-4 py-2 rounded-xl">
+                                        <FiCalendar size={16} className="mr-2 text-indigo-600" />
                                         Joined {new Date(user?.createdAt).toLocaleDateString()}
                                     </div>
                                     {user?.location && (
-                                        <div className="flex items-center">
-                                            <FiMapPin size={16} className="mr-2" />
+                                        <div className="flex items-center bg-gray-50 px-4 py-2 rounded-xl">
+                                            <FiMapPin size={16} className="mr-2 text-red-500" />
                                             {user.location}
                                         </div>
                                     )}
@@ -885,7 +930,7 @@ const Profile = () => {
                                             href={user.website}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+                                            className="flex items-center bg-blue-50 px-4 py-2 rounded-xl text-blue-600 hover:text-blue-800 hover:bg-blue-100 transition-all duration-300"
                                         >
                                             <FiGlobe size={16} className="mr-2" />
                                             Website
@@ -893,19 +938,31 @@ const Profile = () => {
                                     )}
                                 </div>
 
-                                {/* Quick Stats */}
-                                <div className="grid grid-cols-3 gap-4 mt-6 pt-4 border-t border-gray-100">
-                                    <div className="text-center">
-                                        <div className="text-2xl font-bold text-gray-900">{mockStats.codingSessions}</div>
-                                        <div className="text-sm text-gray-600">Sessions</div>
+                                {/* Enhanced Quick Stats */}
+                                <div className="grid grid-cols-3 gap-6 mt-8 pt-6 border-t border-gray-100">
+                                    <div className="text-center group cursor-pointer">
+                                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-2xl group-hover:from-blue-100 group-hover:to-blue-200 transition-all duration-300">
+                                            <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+                                                {mockStats.codingSessions}
+                                            </div>
+                                            <div className="text-sm text-gray-600 font-medium mt-1">Sessions</div>
+                                        </div>
                                     </div>
-                                    <div className="text-center">
-                                        <div className="text-2xl font-bold text-gray-900">{mockStats.collaborations}</div>
-                                        <div className="text-sm text-gray-600">Collaborations</div>
+                                    <div className="text-center group cursor-pointer">
+                                        <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-2xl group-hover:from-green-100 group-hover:to-green-200 transition-all duration-300">
+                                            <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent">
+                                                {mockStats.collaborations}
+                                            </div>
+                                            <div className="text-sm text-gray-600 font-medium mt-1">Collaborations</div>
+                                        </div>
                                     </div>
-                                    <div className="text-center">
-                                        <div className="text-2xl font-bold text-gray-900">{mockStats.hoursTracked}h</div>
-                                        <div className="text-sm text-gray-600">Coded</div>
+                                    <div className="text-center group cursor-pointer">
+                                        <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-2xl group-hover:from-purple-100 group-hover:to-purple-200 transition-all duration-300">
+                                            <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
+                                                {mockStats.hoursTracked}h
+                                            </div>
+                                            <div className="text-sm text-gray-600 font-medium mt-1">Coded</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -913,24 +970,30 @@ const Profile = () => {
                     </div>
                 </div>
 
-                {/* Tab Navigation */}
-                <div className="bg-white rounded-xl shadow-lg mb-6">
-                    <div className="border-b border-gray-200">
-                        <nav className="flex space-x-8 px-6">
+                {/* Enhanced Tab Navigation */}
+                <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl mb-8 border border-white/20">
+                    <div className="border-b border-gray-200/50">
+                        <nav className="flex space-x-2 px-6 overflow-x-auto">
                             {tabs.map((tab) => (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`flex items-center space-x-2 py-4 border-b-2 font-medium text-sm transition-colors ${
+                                    className={`flex items-center space-x-3 py-4 px-6 border-b-3 font-semibold text-sm whitespace-nowrap transition-all duration-300 ${
                                         activeTab === tab.id
-                                            ? 'border-blue-500 text-blue-600'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                            ? 'border-indigo-500 text-indigo-600 bg-indigo-50/50'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50/50'
                                     }`}
                                 >
-                                    <tab.icon size={16} />
+                                    <div className={`p-2 rounded-xl ${
+                                        activeTab === tab.id 
+                                            ? 'bg-indigo-100 text-indigo-600' 
+                                            : 'bg-gray-100 text-gray-500'
+                                    }`}>
+                                        <tab.icon size={16} />
+                                    </div>
                                     <span>{tab.label}</span>
                                     {tab.badge && (
-                                        <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                                        <span className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs px-3 py-1 rounded-full animate-pulse">
                                             {tab.badge}
                                         </span>
                                     )}
@@ -941,11 +1004,11 @@ const Profile = () => {
                 </div>
 
                 {/* Tab Content */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Main Content */}
                     <div className="lg:col-span-2">
                         {activeTab === 'overview' && (
-                            <div className="bg-white rounded-xl shadow-lg p-6">
+                            <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 border border-white/20">
                                 <div className="flex items-center justify-between mb-6">
                                     <h2 className="text-xl font-semibold text-gray-900">Profile Information</h2>
                                 </div>
@@ -1241,108 +1304,144 @@ const Profile = () => {
                         )}
 
                         {activeTab === 'coding-profiles' && (
-                            <div className="space-y-6">
-                                {/* Coding Profiles Management */}
-                                <div className="bg-white rounded-xl shadow-lg p-6">
-                                    <div className="flex items-center justify-between mb-6">
-                                        <h2 className="text-xl font-semibold text-gray-900">Coding Profiles</h2>
+                            <div className="space-y-8">
+                                {/* Enhanced Coding Profiles Management */}
+                                <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 border border-white/20">
+                                    <div className="flex items-center justify-between mb-8">
+                                        <div className="flex items-center space-x-4">
+                                            <div className="p-3 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl">
+                                                <FiCode className="h-8 w-8 text-indigo-600" />
+                                            </div>
+                                            <div>
+                                                <h2 className="text-2xl font-bold text-gray-900">Coding Profiles</h2>
+                                                <p className="text-gray-600">Connect your competitive programming accounts</p>
+                                            </div>
+                                        </div>
                                         <button
                                             onClick={() => setEditingCodingProfiles(!editingCodingProfiles)}
-                                            className="flex items-center space-x-2 text-blue-600 hover:text-blue-800"
+                                            className="flex items-center space-x-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-lg"
                                         >
                                             <FiEdit2 size={16} />
-                                            <span>{editingCodingProfiles ? 'Done' : 'Edit'}</span>
+                                            <span className="font-medium">{editingCodingProfiles ? 'Done' : 'Edit'}</span>
                                         </button>
                                     </div>
 
                                     {editingCodingProfiles && (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 p-4 bg-gray-50 rounded-lg">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Codeforces Username
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border border-gray-200">
+                                            <div className="space-y-3">
+                                                <label className="block text-sm font-semibold text-gray-700">
+                                                    🟦 Codeforces Username
                                                 </label>
-                                                <div className="flex space-x-2">
+                                                <div className="flex space-x-3">
                                                     <input
                                                         type="text"
                                                         value={codingProfiles.codeforces.username}
                                                         onChange={(e) => handleCodingProfileChange('codeforces', e.target.value)}
                                                         placeholder="your_handle"
-                                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                        className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm"
                                                     />
                                                     <button
                                                         type="button"
                                                         onClick={() => fetchCodeforcesData(codingProfiles.codeforces.username)}
                                                         disabled={!codingProfiles.codeforces.username.trim() || codingProfiles.codeforces.loading}
-                                                        className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                                                        className="px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all duration-300 shadow-lg"
                                                     >
-                                                        <FiRefreshCw size={16} />
+                                                        <FiRefreshCw size={16} className={codingProfiles.codeforces.loading ? 'animate-spin' : ''} />
                                                     </button>
                                                 </div>
                                             </div>
                                             
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    LeetCode Username
+                                            <div className="space-y-3">
+                                                <label className="block text-sm font-semibold text-gray-700">
+                                                    🟧 LeetCode Username
                                                 </label>
-                                                <div className="flex space-x-2">
+                                                <div className="flex space-x-3">
                                                     <input
                                                         type="text"
                                                         value={codingProfiles.leetcode.username}
                                                         onChange={(e) => handleCodingProfileChange('leetcode', e.target.value)}
                                                         placeholder="your_username"
-                                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                        className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white shadow-sm"
                                                     />
                                                     <button
                                                         type="button"
                                                         onClick={() => fetchLeetCodeData(codingProfiles.leetcode.username)}
                                                         disabled={!codingProfiles.leetcode.username.trim() || codingProfiles.leetcode.loading}
-                                                        className="px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50"
+                                                        className="px-4 py-3 bg-orange-600 text-white rounded-xl hover:bg-orange-700 disabled:opacity-50 transition-all duration-300 shadow-lg"
                                                     >
-                                                        <FiRefreshCw size={16} />
+                                                        <FiRefreshCw size={16} className={codingProfiles.leetcode.loading ? 'animate-spin' : ''} />
                                                     </button>
                                                 </div>
                                             </div>
                                         </div>
                                     )}
 
-                                    {/* Codeforces Profile */}
-                                    <div className="mb-8">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
-                                                <span>🟦</span>
-                                                <span>Codeforces</span>
-                                            </h3>
+                                    {/* Enhanced Codeforces Profile */}
+                                    <div className="mb-10">
+                                        <div className="flex items-center justify-between mb-6">
+                                            <div className="flex items-center space-x-4">
+                                                <div className="relative">
+                                                    <img 
+                                                        src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" 
+                                                        alt="Codeforces" 
+                                                        className="w-12 h-12 rounded-xl object-cover shadow-lg"
+                                                    />
+                                                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full border-2 border-white"></div>
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-xl font-bold text-gray-900 flex items-center space-x-2">
+                                                        <span>Codeforces</span>
+                                                    </h3>
+                                                    <p className="text-gray-600 text-sm">Competitive Programming Platform</p>
+                                                </div>
+                                            </div>
                                             {codingProfiles.codeforces.username && (
                                                 <button
                                                     onClick={() => refreshCodingProfile('codeforces')}
-                                                    className="text-blue-600 hover:text-blue-800"
+                                                    className="p-3 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-xl transition-all duration-300"
                                                     title="Refresh data"
                                                 >
-                                                    <FiRefreshCw size={16} />
+                                                    <FiRefreshCw size={18} />
                                                 </button>
                                             )}
                                         </div>
-                                        {renderCodeforcesProfile()}
+                                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+                                            {renderCodeforcesProfile()}
+                                        </div>
                                     </div>
 
-                                    {/* LeetCode Profile */}
+                                    {/* Enhanced LeetCode Profile */}
                                     <div>
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
-                                                <span>🟧</span>
-                                                <span>LeetCode</span>
-                                            </h3>
+                                        <div className="flex items-center justify-between mb-6">
+                                            <div className="flex items-center space-x-4">
+                                                <div className="relative">
+                                                    <img 
+                                                        src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" 
+                                                        alt="LeetCode" 
+                                                        className="w-12 h-12 rounded-xl object-cover shadow-lg"
+                                                    />
+                                                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full border-2 border-white"></div>
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-xl font-bold text-gray-900 flex items-center space-x-2">
+                                                        <span>LeetCode</span>
+                                                    </h3>
+                                                    <p className="text-gray-600 text-sm">Algorithm & Data Structure Practice</p>
+                                                </div>
+                                            </div>
                                             {codingProfiles.leetcode.username && (
                                                 <button
                                                     onClick={() => refreshCodingProfile('leetcode')}
-                                                    className="text-orange-600 hover:text-orange-800"
+                                                    className="p-3 text-orange-600 hover:text-orange-800 hover:bg-orange-50 rounded-xl transition-all duration-300"
                                                     title="Refresh data"
                                                 >
-                                                    <FiRefreshCw size={16} />
+                                                    <FiRefreshCw size={18} />
                                                 </button>
                                             )}
                                         </div>
-                                        {renderLeetCodeProfile()}
+                                        <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6 border border-orange-100">
+                                            {renderLeetCodeProfile()}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1440,67 +1539,123 @@ const Profile = () => {
                         )}
                     </div>
 
-                    {/* Sidebar */}
-                    <div className="space-y-6">
-                        {/* Detailed Stats */}
-                        <div className="bg-white rounded-xl shadow-lg p-6">
-                            <h2 className="text-xl font-semibold text-gray-900 mb-4">Detailed Statistics</h2>
+                    {/* Enhanced Sidebar */}
+                    <div className="space-y-8">
+                        {/* Enhanced Detailed Stats */}
+                        <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-6 border border-white/20">
+                            <div className="flex items-center space-x-3 mb-6">
+                                <div className="p-3 bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl">
+                                    <FiBarChart2 className="h-6 w-6 text-purple-600" />
+                                </div>
+                                <h2 className="text-xl font-bold text-gray-900">Statistics</h2>
+                            </div>
                             
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between">
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl">
                                     <div className="flex items-center space-x-3">
-                                        <div className="bg-blue-100 p-2 rounded-lg">
-                                            <FiCode className="h-5 w-5 text-blue-600" />
+                                        <div className="bg-blue-500 p-3 rounded-xl shadow-lg">
+                                            <FiCode className="h-5 w-5 text-white" />
                                         </div>
-                                        <span className="text-gray-900">Lines of Code</span>
+                                        <span className="font-medium text-gray-900">Lines of Code</span>
                                     </div>
-                                    <span className="text-xl font-semibold text-gray-900">{mockStats.linesOfCode.toLocaleString()}</span>
+                                    <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+                                        {mockStats.linesOfCode.toLocaleString()}
+                                    </span>
                                 </div>
                                 
-                                <div className="flex items-center justify-between">
+                                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-xl">
                                     <div className="flex items-center space-x-3">
-                                        <div className="bg-green-100 p-2 rounded-lg">
-                                            <FiTrendingUp className="h-5 w-5 text-green-600" />
+                                        <div className="bg-green-500 p-3 rounded-xl shadow-lg">
+                                            <FiTrendingUp className="h-5 w-5 text-white" />
                                         </div>
-                                        <span className="text-gray-900">Projects</span>
+                                        <span className="font-medium text-gray-900">Projects</span>
                                     </div>
-                                    <span className="text-xl font-semibold text-gray-900">{mockStats.projectsCompleted}</span>
+                                    <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent">
+                                        {mockStats.projectsCompleted}
+                                    </span>
                                 </div>
                                 
-                                <div className="flex items-center justify-between">
+                                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl">
                                     <div className="flex items-center space-x-3">
-                                        <div className="bg-purple-100 p-2 rounded-lg">
-                                            <FiStar className="h-5 w-5 text-purple-600" />
+                                        <div className="bg-purple-500 p-3 rounded-xl shadow-lg">
+                                            <FiStar className="h-5 w-5 text-white" />
                                         </div>
-                                        <span className="text-gray-900">Favorite Language</span>
+                                        <span className="font-medium text-gray-900">Favorite Language</span>
                                     </div>
-                                    <span className="text-xl font-semibold text-gray-900">{mockStats.favoriteLanguage}</span>
+                                    <span className="text-lg font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
+                                        {mockStats.favoriteLanguage}
+                                    </span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Quick Actions */}
-                        <div className="bg-white rounded-xl shadow-lg p-6">
-                            <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
+                        {/* Enhanced Quick Actions */}
+                        <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-6 border border-white/20">
+                            <div className="flex items-center space-x-3 mb-6">
+                                <div className="p-3 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl">
+                                    <FiZap className="h-6 w-6 text-indigo-600" />
+                                </div>
+                                <h2 className="text-xl font-bold text-gray-900">Quick Actions</h2>
+                            </div>
                             
-                            <div className="space-y-3">
+                            <div className="space-y-4">
                                 <button
                                     onClick={() => navigate('/')}
-                                    className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                                    className="w-full flex items-center justify-center space-x-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 px-6 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                                 >
-                                    <FiCode size={16} />
-                                    <span>Start Coding</span>
+                                    <div className="p-2 bg-white/20 rounded-lg">
+                                        <FiCode size={18} />
+                                    </div>
+                                    <span className="font-semibold">Start Coding</span>
                                 </button>
                                 
-                                <button className="w-full flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors">
-                                    <FiUsers size={16} />
-                                    <span>Find Collaborators</span>
+                                <button className="w-full flex items-center justify-center space-x-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 px-6 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                    <div className="p-2 bg-white/20 rounded-lg">
+                                        <FiUsers size={18} />
+                                    </div>
+                                    <span className="font-semibold">Find Collaborators</span>
                                 </button>
                                 
-                                <button className="w-full flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors">
-                                    <FiAward size={16} />
-                                    <span>View Achievements</span>
+                                <button className="w-full flex items-center justify-center space-x-3 bg-gradient-to-r from-orange-500 to-red-600 text-white py-4 px-6 rounded-xl hover:from-orange-600 hover:to-red-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                    <div className="p-2 bg-white/20 rounded-lg">
+                                        <FiAward size={18} />
+                                    </div>
+                                    <span className="font-semibold">View Achievements</span>
                                 </button>
+                            </div>
+                        </div>
+
+                        {/* Coding Journey Card */}
+                        <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-xl p-6 text-white overflow-hidden relative">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+                            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
+                            
+                            <div className="relative">
+                                <div className="flex items-center space-x-3 mb-4">
+                                    <div className="p-3 bg-white/20 rounded-2xl">
+                                        <FiGift className="h-6 w-6" />
+                                    </div>
+                                    <h3 className="text-xl font-bold">Coding Journey</h3>
+                                </div>
+                                
+                                <p className="text-white/90 mb-4">
+                                    "The journey of a thousand miles begins with a single step. Keep coding, keep growing!"
+                                </p>
+                                
+                                <div className="flex items-center space-x-4">
+                                    <div className="text-center">
+                                        <div className="text-2xl font-bold">365</div>
+                                        <div className="text-sm text-white/80">Days</div>
+                                    </div>
+                                    <div className="text-center">
+                                        <div className="text-2xl font-bold">12</div>
+                                        <div className="text-sm text-white/80">Languages</div>
+                                    </div>
+                                    <div className="text-center">
+                                        <div className="text-2xl font-bold">∞</div>
+                                        <div className="text-sm text-white/80">Possibilities</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

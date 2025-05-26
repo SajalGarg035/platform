@@ -12,3 +12,15 @@ mongoose.connect('mongodb+srv://sajal:sajal123@cluster0.urmyxu4.mongodb.net/myap
 })
 .then(() => console.log('✅ Connected to MongoDB'))
 .catch(err => console.error('❌ MongoDB connection error:', err));
+
+
+const db = mongoose.connection;
+
+db.on('error', (err) => {
+  console.error('❌ Mongoose connection error (via event):', err);
+});
+
+db.once('open', () => {
+  console.log('✅ Mongoose connection opened (via event)');
+});
+

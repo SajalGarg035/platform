@@ -1,4 +1,199 @@
-  }
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const passport = require('passport');
+const session = require('express-session');
+const MongoStore = require('connect-mongo');
+require('dotenv').config();
+
+const app = express();
+const { exec } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+const http = require('http');
+const { Server } = require('socket.io');
+
+const ACTIONS = require('./src/actions/Actions');
+
+// Import routes
+const authRoutes = require('./routes/auth');
+const aiRoutes = require('./routes/ai');
+
+// Passport configuration - import after routes
+require('./config/passport');
+
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: process.env.CLIENT_URL || "http://localhost:3000",
+        methods: ["GET", "POST"],
+        credentials: true
+    }
+});
+
+// MongoDB connection
+mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://sajal:sajal123@cluster0.urmyxu4.mongodb.net/codesync-pro', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+})
+.then(() => console.log('✅ Connected to MongoDB'))
+.catch(err => console.error('❌ MongoDB connection error:', err));
+
+// Middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cors({
+    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    credentials: true,            // <-- Allow the browser to send cookies
+    methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+    allowedHeaders: ['Content-Type','Authorization','X-Requested-With'],
+  }));
+  
+// Session configuration
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'codesync-pro-secret-key-2024',
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGODB_URI || 'mongodb+srv://sajal:sajal123@cluster0.urmyxu4.mongodb.net/codesync-pro',
+        touchAfter: 24 * 3600
+    }),
+    cookie: {
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    }
+}));
+
+// Passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Add request logging middleware
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.path} - ${new Date().toISOString()}`);
+    next();
+});
+
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/ai', aiRoutes);
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({ 
+        status: 'OK', 
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
+// Serve static files from the React app build directory only if it exists
+const buildPath = path.join(__dirname, 'build');
+if (fs.existsSync(buildPath)) {
+    app.use(express.static(buildPath));
+} else {
+    console.warn('⚠️ Build directory not found. Run "npm run build" to create production build.');
+}
+
+const userSocketMap = {};
+function getAllConnectedClients(roomId) {
+    return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map(
+        (socketId) => {
+            return {
+                socketId,
+                username: userSocketMap[socketId],
+            };
+        }
+    );
+}
+
+function compileAndRunCode(code, language, inputs = [], callback) {
+    const tempDir = path.join(__dirname, 'temp');
+    if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+    }
+
+    let fileName, command;
+    const timestamp = Date.now();
+    const startTime = Date.now();
+
+    let inputData = '';
+    if (inputs && inputs.length > 0) {
+        inputData = inputs.map(input => input.value).join('\n') + '\n';
+    }
+
+    switch (language) {
+        case 'javascript':
+            fileName = `temp_${timestamp}.js`;
+            let modifiedCode = code;
+            if (inputs.length > 0) {
+                const inputValues = inputs.map(input => `"${input.value}"`).join(', ');
+                modifiedCode = `
+                const inputs = [${inputValues}];
+                let inputIndex = 0;
+                const readline = { question: (prompt, callback) => { 
+                    console.log(prompt + inputs[inputIndex] || ''); 
+                    callback(inputs[inputIndex++] || ''); 
+                }};
+                
+                ${code}
+                `;
+            }
+            fs.writeFileSync(path.join(tempDir, fileName), modifiedCode);
+            command = `node ${path.join(tempDir, fileName)}`;
+            break;
+            
+        case 'python':
+            fileName = `temp_${timestamp}.py`;
+            let pythonCode = code;
+            if (inputs.length > 0) {
+                const inputFileName = `input_${timestamp}.txt`;
+                fs.writeFileSync(path.join(tempDir, inputFileName), inputData);
+                pythonCode = `
+import sys
+sys.stdin = open('${inputFileName}', 'r')
+
+${code}
+`;
+            }
+            fs.writeFileSync(path.join(tempDir, fileName), pythonCode);
+            command = `cd ${tempDir} && python3 ${fileName}`;
+            break;
+            
+        case 'cpp':
+        case 'clike':
+            fileName = `temp_${timestamp}.cpp`;
+            const executableName = `temp_${timestamp}`;
+            fs.writeFileSync(path.join(tempDir, fileName), code);
+            if (inputs.length > 0) {
+                const inputFileName = `input_${timestamp}.txt`;
+                fs.writeFileSync(path.join(tempDir, inputFileName), inputData);
+                command = `cd ${tempDir} && g++ ${fileName} -o ${executableName} && ./${executableName} < ${inputFileName}`;
+            } else {
+                command = `cd ${tempDir} && g++ ${fileName} -o ${executableName} && ./${executableName}`;
+            }
+            break;
+            
+        default:
+            callback({ error: 'Language not supported for compilation' });
+            return;
+    }
+
+    exec(command, { timeout: 15000, cwd: tempDir }, (error, stdout, stderr) => {
+        const executionTime = Date.now() - startTime;
+        
+        try {
+            if (fs.existsSync(path.join(tempDir, fileName))) {
+                fs.unlinkSync(path.join(tempDir, fileName));
+            }
+            if (language === 'clike' || language === 'cpp') {
+                const execPath = path.join(tempDir, `temp_${timestamp}`);
+                if (fs.existsSync(execPath)) {
+                    fs.unlinkSync(execPath);
+                }
+            }
             const inputFileName = `input_${timestamp}.txt`;
             if (fs.existsSync(path.join(tempDir, inputFileName))) {
                 fs.unlinkSync(path.join(tempDir, inputFileName));

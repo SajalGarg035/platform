@@ -8,6 +8,7 @@ import Login from './components/auth/Login';
 import Signup from './components/auth/Signup';
 import Profile from './components/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
+import AIAssistant from './components/AIAssistant';
 import {RecoilRoot} from "recoil";
 import {AuthProvider} from './context/AuthContext';
 import AuthSuccess from './components/auth/AuthSuccess';
@@ -70,6 +71,7 @@ function App() {
                                 }
                             />
                         </Routes>
+                        <AIAssistant />
                     </RecoilRoot>
                 </AuthProvider>
             </BrowserRouter>

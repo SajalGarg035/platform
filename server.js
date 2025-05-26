@@ -307,33 +307,106 @@ app.use((err, req, res, next) => {
             : err.message
     });
 });
-
-// Handle React routes - only serve index.html for non-API routes
 app.get('*', (req, res) => {
-    // Don't serve React app for API routes
-    if (req.path.startsWith('/api/')) {
-        return res.status(404).json({ 
-            success: false, 
-            message: 'API endpoint not found' 
-        });
-    }
-    
-    const indexPath = path.join(__dirname, 'build', 'index.html');
-    if (fs.existsSync(indexPath)) {
-        res.sendFile(indexPath);
-    } else {
-        res.status(200).json({
-            message: 'CodeSync Pro API Server is running',
-            version: '1.0.0',
-            endpoints: {
-                auth: '/api/auth',
-                health: '/api/health'
-            },
-            note: 'Build your React app with "npm run build" to serve the frontend'
-        });
-    }
-});
-
+    res.status(404).send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>404 — Page Not Found</title>
+        <style>
+          /* Reset & base */
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            color: #444;
+            background: #f7f9fc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+          }
+          .container {
+            text-align: center;
+            max-width: 600px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            overflow: hidden;
+          }
+          .image-wrapper {
+            width: 100%;
+            height: 300px;
+            overflow: hidden;
+          }
+          .image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.9);
+            transition: transform 0.5s;
+          }
+          .image-wrapper img:hover {
+            transform: scale(1.05);
+          }
+          .content {
+            padding: 30px;
+          }
+          h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            color: #222;
+          }
+          p {
+            font-size: 1rem;
+            margin-bottom: 20px;
+            line-height: 1.5;
+          }
+          .btn-home {
+            display: inline-block;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: background 0.3s, transform 0.3s;
+          }
+          .btn-home:hover {
+            background: linear-gradient(135deg, #5b0eb3, #1f65d1);
+            transform: translateY(-2px);
+          }
+          .btn-home:active {
+            transform: translateY(0);
+          }
+          @media (max-width: 480px) {
+            .image-wrapper { height: 200px; }
+            h1 { font-size: 2.5rem; }
+            .btn-home { width: 100%; text-align: center; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="image-wrapper">
+            <!-- Dynamic coding illustration from Unsplash -->
+            <img src="https://th.bing.com/th/id/OIP.6vjKiP3D40t85WJ0OvK8VQHaFW?w=244&h=180&c=7&r=0&o=5&dpr=1.6&pid=1.7" alt="Coding Illustration">
+          </div>
+          <div class="content">
+            <h1>Oops! Page Not Found</h1>
+            <p>We can’t seem to find the page you’re looking for. It might have been moved or deleted.</p>
+            <a href="http://localhost:3000" class="btn-home">← Back to Home</a>
+          </div>
+        </div>
+      </body>
+      </html>
+    `);
+  });
+  
 const PORT = 5000;
 server.listen(PORT, () => {
     console.log(`🚀 Server listening on port ${PORT}`);

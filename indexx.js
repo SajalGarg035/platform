@@ -5,6 +5,8 @@ const passport = require('passport');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 
+console.log('🚀 Starting server...');
+
 mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://sajal:sajal123@cluster0.urmyxu4.mongodb.net/', {
     useNewUrlParser: true,
     useUnifiedTopology: true,

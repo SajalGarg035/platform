@@ -1,0 +1,385 @@
+.editor-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+  position: relative;
+  font-family: 'Inter', sans-serif;
+}
+
+.editor-container.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  background: var(--bg-primary);
+}
+
+.editor-toolbar {
+  height: 40px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  position: relative;
+  z-index: 100;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.language-selector {
+  position: relative;
+}
+
+.language-select {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-width: 120px;
+}
+
+.language-select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.2);
+}
+
+.theme-selector {
+  position: relative;
+}
+
+.theme-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.theme-button:hover {
+  background: var(--bg-hover);
+  border-color: var(--primary-color);
+}
+
+.theme-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  min-width: 380px;
+  max-height: 500px;
+  overflow-y: auto;
+  z-index: 1000;
+  padding: 12px;
+}
+
+.theme-category {
+  margin-bottom: 16px;
+}
+
+.theme-category:last-child {
+  margin-bottom: 0;
+}
+
+.category-header {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 6px;
+}
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 11px;
+  color: var(--text-primary);
+}
+
+.theme-option:hover {
+  background: var(--bg-hover);
+  border-color: var(--primary-color);
+}
+
+.theme-option.active {
+  background: rgba(0, 122, 204, 0.1);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.theme-preview {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.theme-name {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.settings-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.settings-section h4 {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 12px 0;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.setting-row label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  min-width: 70px;
+}
+
+.setting-row input[type="range"] {
+  flex: 1;
+  height: 4px;
+  background: var(--bg-tertiary);
+  border-radius: 2px;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.setting-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--primary-color);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.setting-row span {
+  font-size: 10px;
+  color: var(--text-muted);
+  min-width: 40px;
+  text-align: right;
+}
+
+.setting-toggle {
+  margin-bottom: 8px;
+}
+
+.setting-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.setting-toggle input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--primary-color);
+}
+
+.toolbar-btn {
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: var(--text-secondary);
+}
+
+.toolbar-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.editor-wrapper {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.CodeMirror {
+  height: 100% !important;
+  font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace !important;
+  background: transparent !important;
+}
+
+.CodeMirror-gutters {
+  background: var(--bg-secondary) !important;
+  border-right: 1px solid var(--border-color) !important;
+}
+
+.CodeMirror-linenumber {
+  color: var(--text-muted) !important;
+  padding: 0 8px !important;
+}
+
+.CodeMirror-cursor {
+  border-left: 2px solid var(--primary-color) !important;
+}
+
+.CodeMirror-selected {
+  background: rgba(0, 122, 204, 0.15) !important;
+}
+
+.CodeMirror-activeline-background {
+  background: rgba(0, 122, 204, 0.05) !important;
+}
+
+.CodeMirror-matchingbracket {
+  background: rgba(0, 122, 204, 0.2) !important;
+  color: inherit !important;
+}
+
+.CodeMirror-foldmarker {
+  background: var(--primary-color) !important;
+  color: white !important;
+  border-radius: 3px !important;
+  padding: 0 4px !important;
+  font-size: 10px !important;
+}
+
+.settings-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .theme-dropdown {
+    min-width: 300px;
+    left: auto;
+    right: 0;
+  }
+  
+  .theme-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .toolbar-left {
+    gap: 8px;
+  }
+  
+  .language-select {
+    min-width: 100px;
+  }
+}
+
+@media (max-width: 480px) {
+  .editor-toolbar {
+    padding: 0 8px;
+  }
+  
+  .theme-dropdown {
+    min-width: 280px;
+    max-height: 400px;
+  }
+  
+  .toolbar-btn span {
+    display: none;
+  }
+}
+
+/* Animation for smooth theme transitions */
+.CodeMirror * {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Enhanced scrollbar for CodeMirror */
+.CodeMirror-scrollbar-filler {
+  background: var(--bg-secondary) !important;
+}
+
+.CodeMirror-vscrollbar::-webkit-scrollbar,
+.CodeMirror-hscrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.CodeMirror-vscrollbar::-webkit-scrollbar-track,
+.CodeMirror-hscrollbar::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+.CodeMirror-vscrollbar::-webkit-scrollbar-thumb,
+.CodeMirror-hscrollbar::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.CodeMirror-vscrollbar::-webkit-scrollbar-thumb:hover,
+.CodeMirror-hscrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}

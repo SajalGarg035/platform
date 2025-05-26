@@ -43,11 +43,9 @@ const Login = () => {
     };
 
     const handleOAuthLogin = (provider) => {
-<<<<<<< HEAD
+
         window.location.href = `${process.env.REACT_APP_BACKEND_URL || 'http://72.145.9.233:5000'}/auth/${provider}`;
-=======
-        window.location.href = `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}/auth/${provider}`;
->>>>>>> 82e6ba34d077ad6512d297adb8612f380b576110
+
     };
 
     return (

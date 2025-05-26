@@ -25,7 +25,11 @@ require('./config/passport');
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
+<<<<<<< HEAD
         origin: process.env.CLIENT_URL || "http://72.145.9.233:3000",
+=======
+        origin: process.env.CLIENT_URL || "http://localhost:3000",
+>>>>>>> 82e6ba34d077ad6512d297adb8612f380b576110
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -43,7 +47,11 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://sajal:sajal123@cluste
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cors({
+<<<<<<< HEAD
     origin: process.env.CLIENT_URL || 'http://72.145.9.233:3000',
+=======
+    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+>>>>>>> 82e6ba34d077ad6512d297adb8612f380b576110
     credentials: true,            // <-- Allow the browser to send cookies
     methods: ['GET','POST','PUT','DELETE','OPTIONS'],
     allowedHeaders: ['Content-Type','Authorization','X-Requested-With'],
@@ -508,5 +516,9 @@ const PORT = 5000;
 server.listen(PORT, () => {
     console.log(`🚀 Server listening on port ${PORT}`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+<<<<<<< HEAD
     console.log(`🔗 Client URL: ${process.env.CLIENT_URL || 'http://72.145.9.233:3000'}`);
+=======
+    console.log(`🔗 Client URL: ${process.env.CLIENT_URL || 'http://localhost:3000'}`);
+>>>>>>> 82e6ba34d077ad6512d297adb8612f380b576110
 });

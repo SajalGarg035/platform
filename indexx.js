@@ -6,7 +6,7 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo');
 
 console.log('🚀 Starting server...');
-mongoose.connect('mongodb+srv://sajalgarg20061:sajal123@cluster0.urmyxu4.mongodb.net/myappdb?retryWrites=true&w=majority', {
+mongoose.connect('mongodb+srv://IIT2023035:sajal123@university.fdifthx.mongodb.net/', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   serverSelectionTimeoutMS: 10000, // 10 seconds

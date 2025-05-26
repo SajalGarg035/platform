@@ -175,7 +175,7 @@ const Signup = () => {
                                         placeholder="Choose a username"
                                     />
                                     {formData.username.length >= 3 && (
-                                        <FiCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500" size={18} />
+                                        <FiCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500\" size={18} />
                                     )}
                                 </div>
                             </div>

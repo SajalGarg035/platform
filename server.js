@@ -331,7 +331,7 @@ app.get('*', (req, res) => {
     }
 });
 
-const PORT = process.env.PORT || process.env.SERVER_PORT || 5000;
+const PORT = 5000;
 server.listen(PORT, () => {
     console.log(`🚀 Server listening on port ${PORT}`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);

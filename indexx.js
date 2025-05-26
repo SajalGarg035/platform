@@ -9,7 +9,7 @@ console.log('🚀 Starting server...');
 mongoose.connect('mongodb+srv://sajal:sajal123@cluster0.urmyxu4.mongodb.net/myappdb?retryWrites=true&w=majority', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 10000 // 10 seconds
+  serverSelectionTimeoutMS: 10000, // 10 seconds
 })
 .then(() => console.log('✅ Connected to MongoDB'))
 .catch(err => console.error('❌ MongoDB connection error:', err));

@@ -1,0 +1,13 @@
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const passport = require('passport');
+const session = require('express-session');
+const MongoStore = require('connect-mongo');
+
+mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://sajal:sajal123@cluster0.urmyxu4.mongodb.net/codesync-pro', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+})
+.then(() => console.log('✅ Connected to MongoDB'))
+.catch(err => console.error('❌ MongoDB connection error:', err));

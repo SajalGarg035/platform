@@ -6,12 +6,9 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo');
 
 console.log('🚀 Starting server...');
-
-mongoose.connect('mongodb+srv://sajal:sajal123@cluster0.urmyxu4.mongodb.net/', {
+mongoose.connect('mongodb+srv://sajal:sajal123@cluster0.urmyxu4.mongodb.net/myappdb?retryWrites=true&w=majority', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 })
 .then(() => console.log('✅ Connected to MongoDB'))
 .catch(err => console.error('❌ MongoDB connection error:', err));
-mongoose.set('debug', true);
-

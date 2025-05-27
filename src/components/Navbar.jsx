@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Menu, X, Code, Users, Settings, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate();
 
   const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: Code },
@@ -22,7 +21,7 @@ const Navbar = () => {
               <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2 rounded-lg">
                 <Code className="h-6 w-6 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900">
+              <span className="text-xl font-bold text-gray-900 hidden sm:block">
                 CodeSync Pro
               </span>
             </Link>
@@ -46,9 +45,9 @@ const Navbar = () => {
                 <img
                   className="h-8 w-8 rounded-full"
                   src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                  alt="sajalgarg"
+                  alt="User"
                 />
-                <span className="text-sm font-medium text-gray-700">sajalgarg035</span>
+                <span className="text-sm font-medium text-gray-700">User</span>
               </div>
               <button className="text-gray-400 hover:text-gray-600">
                 <LogOut className="h-5 w-5" />
@@ -60,7 +59,7 @@ const Navbar = () => {
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-600 hover:text-gray-900 p-2"
             >
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -88,6 +87,22 @@ const Navbar = () => {
                 <span>{item.name}</span>
               </Link>
             ))}
+            
+            <div className="border-t border-gray-200 mt-2 pt-2">
+              <div className="flex items-center justify-between px-3 py-2">
+                <div className="flex items-center space-x-2">
+                  <img
+                    className="h-8 w-8 rounded-full"
+                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                    alt="User"
+                  />
+                  <span className="text-sm font-medium text-gray-700">User</span>
+                </div>
+                <button className="text-gray-400 hover:text-gray-600">
+                  <LogOut className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
           </div>
         </motion.div>
       )}
